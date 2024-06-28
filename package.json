@@ -1,6 +1,6 @@
 {
   "name": "cdn-global-p",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CDN packge .js and css global ",
   "main": "index.js",
   "scripts": {
