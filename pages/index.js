@@ -3,7 +3,7 @@ import React from 'react';
 const HomePage = () => {
   return (
     <div>
-      <h1>Hello Next.js!</h1>
+      <h1>Hello CDN - cli help -- next time with node.json DB!</h1>
 
       <div id="root">
   <script src="css/woocommerce.css" crossorigin="anonymous"></script>

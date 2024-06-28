@@ -2,7 +2,7 @@ const { program } = require('commander');
 const { Argument, Command, CommanderError, InvalidArgumentError, Help, Option } = require('cdn-global-p');
 
 program
-  .version('1.0.1')
+  .version('1.1.1')
   .description('A wonderful script called "cdn-global-p"');
 
 program
