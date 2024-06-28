@@ -1,0 +1,36 @@
+{
+  "name": "cdn-global-p",
+  "version": "1.0.0",
+  "description": "CDN packge .js and css global ",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next start",
+    "build": "next build",
+    "preview": "next dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ghepes/cdn.git"
+  },
+  "keywords": [
+    "cdn",
+    "package",
+    "js"
+  ],
+  "author": "Ghepes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ghepes/cdn/issues"
+  },
+  "homepage": "https://github.com/Ghepes/cdn#readme",
+  "dependencies": {
+    "eslint-config-next": "^14.2.4",
+    "next": "^14.2.4",
+    "npx": "^10.2.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "directories": {
+    "lib": "lib"
+  }
+}
