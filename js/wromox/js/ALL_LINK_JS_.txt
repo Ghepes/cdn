@@ -1,0 +1,14 @@
+https://wromo.org/wp-includes/js/hoverintent-js.min.js?ver=2.2.1
+
+https://wromo.org/wp-includes/js/admin-bar.min.js?ver=6.5.5
+
+https://wromo.org/wp-content/plugins/customer-reviews-woocommerce/js/frontend.js?ver=5.52.1
+
+https://wromo.org/wp-content/plugins/customer-reviews-woocommerce/js/colcade.js?ver=5.52.1
+
+https://wromo.org/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.6
+
+https://wromo.org/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.6
+
+https://wromo.org/wp-content/plugins/revslider/public/assets/js/rbtools.min.js?ver=6.6.20
+
