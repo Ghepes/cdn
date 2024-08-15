@@ -6,3 +6,6 @@ https://wromo.org/wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks.
 
 https://wromo.org/wp-content/plugins/js_composer/assets/lib/bower/font-awesome/css/v4-shims.min.css?ver=7.4
 
+https://wromo.org/wp-content/plugins/js_composer/assets/lib/bower/font-awesome/css/all.min.css?ver=7.4
+
+https://wromo.org/wp-content/plugins/js_composer/assets/lib/bower/font-awesome/css/all.min.css?ver=7.4

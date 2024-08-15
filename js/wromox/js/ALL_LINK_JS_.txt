@@ -8,7 +8,309 @@ https://wromo.org/wp-content/plugins/customer-reviews-woocommerce/js/colcade.js?
 
 https://wromo.org/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.6
 
-https://wromo.org/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.6
 
 https://wromo.org/wp-content/plugins/revslider/public/assets/js/rbtools.min.js?ver=6.6.20
 
+
+
+
+wromo.net
+
+
+acuma da pot sa va spun master.  Urmatorul pass: deci fuctioneaza dar lipseste HD "tts-1-HD" sunt 2x tts-1 si tts-1-hd, limbile importante lipsesc ca germana si altele, si o mare problema este stylesheet cum ar fi bootstrap CDN am adaugat cele doua Stylesheet CDN ' <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script> ' si loading Icons spinner de la Bootstrap cind este in asteptare Audio ' <button class="btn btn-primary" type="button" disabled>
+  <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+  <span class="sr-only">Loading...</span>
+</button>
+<button class="btn btn-primary" type="button" disabled>
+  <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+  Loading...
+</button> '
+
+
+
+
+
+
+########
+
+
+
+Fișierul Principal al Pluginului: openai-tts-plugin.php
+php
+Copy code
+<?php
+/*
+Plugin Name: OpenAI Text to Speech
+Description: Plugins Integrate OpenAI API Key Text to Speech with WordPress.
+Version: 4.2
+Author: Team Studio Wromo
+*/
+
+// Include fișierul audio-upload.php
+include_once plugin_dir_path(__FILE__) . 'audio-upload.php';
+
+add_action('admin_menu', 'openai_tts_menu');
+add_action('admin_init', 'openai_tts_settings');
+add_action('wp_enqueue_scripts', 'openai_tts_enqueue_scripts');
+
+function openai_tts_menu() {
+    add_options_page('OpenAI TTS Settings', 'OpenAI TTS', 'manage_options', 'openai-tts', 'openai_tts_options');
+}
+
+function openai_tts_settings() {
+    register_setting('openai-tts-group', 'openai_tts_api_key');
+}
+
+function openai_tts_options() {
+?>
+    <div class="wrap">
+        <h1>OpenAI TTS Settings</h1>
+        <form method="post" action="options.php">
+            <?php settings_fields('openai-tts-group'); ?>
+            <?php do_settings_sections('openai-tts-group'); ?>
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row">OpenAI API Key</th>
+                    <td><input type="text" name="openai_tts_api_key" value="<?php echo esc_attr(get_option('openai_tts_api_key')); ?>" /></td>
+                </tr>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+<?php
+}
+
+function openai_tts_enqueue_scripts() {
+    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css', array(), '5.3.3');
+    wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js', array(), '5.3.3', true);
+}
+
+add_shortcode('openai_tts', 'openai_tts_function');
+
+function openai_tts_function($atts, $content = null) {
+    $api_key = get_option('openai_tts_api_key');
+    $text = $content;
+
+    if (!$api_key) {
+        return 'Please set your OpenAI API key in the settings.';
+    }
+
+    ob_start();
+    ?>
+    <form id="openai-tts-form" class="mb-3">
+        <textarea name="text" rows="4" class="form-control mb-3" placeholder="Enter text here..."><?php echo esc_textarea($text); ?></textarea><br>
+        <label for="model" class="form-label">Choose a model:</label>
+        <select name="model" id="model" class="form-select mb-3">
+            <option value="tts-1">TTS-1</option>
+            <option value="tts-1-hd">TTS-1-HD</option>
+        </select><br>
+        <label for="language" class="form-label">Choose a language:</label>
+        <select name="language" id="language" class="form-select mb-3">
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="es">Spanish</option>
+            <option value="de">German</option>
+            <option value="it">Italian</option>
+            <option value="ro">Romana</option>
+            <option value="tr">Turkish</option>
+            <option value="br">Brazil</option>
+        </select><br>
+        <label for="voice" class="form-label">Choose a voice:</label>
+        <select name="voice" id="voice" class="form-select mb-3">
+            <option value="alloy">Alloy</option>
+            <option value="echo">Echo</option>
+            <option value="fable">Fable</option>
+            <option value="onyx">Onyx</option>
+            <option value="nova">Nova</option>
+            <option value="shimmer">Shimmer</option>
+        </select><br>
+        <button type="button" class="btn btn-primary" onclick="convertTextToSpeech()">Convert to Speech</button>
+        <button id="loading-spinner" class="btn btn-primary" type="button" disabled style="display:none;">
+            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+            Loading...
+        </button>
+    </form>
+    <audio id="tts-audio" controls style="display:none;" class="mt-3"></audio>
+
+    <script>
+        function convertTextToSpeech() {
+            var text = document.querySelector('[name="text"]').value;
+            var model = document.querySelector('[name="model"]').value;
+            var language = document.querySelector('[name="language"]').value;
+            var voice = document.querySelector('[name="voice"]').value;
+            var button = document.querySelector('button[type="button"]');
+            var spinner = document.getElementById('loading-spinner');
+
+            button.style.display = 'none';
+            spinner.style.display = 'inline-block';
+
+            fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer <?php echo $api_key; ?>',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    input: text,
+                    voice: voice
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                var url = URL.createObjectURL(blob);
+                var audio = document.getElementById('tts-audio');
+                audio.src = url;
+                audio.style.display = 'block';
+                audio.play();
+                button.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred: ' + error.message);
+                button.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            });
+        }
+    </script>
+    <?php
+    return ob_get_clean();
+}
+?>
+Fișierul audio-upload.php
+php
+Copy code
+<?php
+// Adaugă meniul de încărcare audio în admin
+add_action('admin_menu', 'audio_upload_menu');
+
+function audio_upload_menu() {
+    add_menu_page(
+        'Audio Upload',        // Titlul paginii
+        'Audio Upload',        // Textul meniului
+        'manage_options',      // Capacitatea necesară
+        'audio-upload',        // Slug-ul meniului
+        'audio_upload_page',   // Funcția care afișează conținutul paginii
+        'dashicons-media-audio'// Icon-ul meniului
+    );
+}
+
+function audio_upload_page() {
+    ?>
+    <div class="wrap">
+        <h1>Upload Audio</h1>
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="audio_file" />
+            <input type="submit" name="upload_audio" value="Upload Audio" class="button button-primary" />
+        </form>
+    </div>
+    <?php
+    if (isset($_POST['upload_audio'])) {
+        handle_audio_upload();
+    }
+}
+
+function handle_audio_upload() {
+    if (!function_exists('wp_handle_upload')) {
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+    }
+    $uploadedfile = $_FILES['audio_file'];
+    $upload_overrides = array('test_form' => false);
+
+    $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
+
+    if ($movefile && !isset($movefile['error'])) {
+        echo "File is valid, and was successfully uploaded.\n";
+        echo '<pre>';
+        print_r($movefile);
+        echo '</pre>';
+    } else {
+        echo $movefile['error'];
+    }
+}
+
+// Crează shortcode-ul [CODE_AUDIO]
+add_shortcode('CODE_AUDIO', 'display_latest_audio');
+
+function display_latest_audio() {
+    $args = array(
+        'post_type' => 'attachment',
+        'post_mime_type' => 'audio',
+        'posts_per_page' => 4,
+        'post_status' => 'inherit',
+        'orderby' => 'date',
+        'order' => 'DESC'
+    );
+    $query = new WP_Query($args);
+    $output = '<div class="audio-files">';
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $audio_url = wp_get_attachment_url(get_the_ID());
+            $output .= '<audio controls><source src="' . $audio_url . '" type="audio/mpeg">Your browser does not support the audio element.</audio>';
+        }
+    } else {
+        $output .= '<p>No audio files found.</p>';
+    }
+    $output .= '</div>';
+    wp_reset_postdata();
+    return $output;
+}
+?>
+Fișierul CSS (audio-styles.css)
+css
+Copy code
+.audio-files {
+    float: right;
+    width: 25%;
+    margin-left: 15px;
+}
+.audio-files audio {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+}
+Adăugarea unui Buton de Încărcare Audio în Editorul de Pagini
+Fișierul upload-script.js
+Creează un fișier upload-script.js în același director cu fișierul principal al pluginului.
+
+javascript
+Copy code
+jQuery(document).ready(function($) {
+    $('#insert-my-media').on('click', function(e) {
+        e.preventDefault();
+        var frame = wp.media({
+            title: 'Select or Upload an Audio File',
+            button: {
+                text: 'Use this audio'
+            },
+            multiple: false
+        });
+
+        frame.on('select', function() {
+            var attachment = frame.state().get('selection').first().toJSON();
+            var audioUrl = attachment.url;
+            // Inserează URL-ul audio în editorul de pagini
+            wp.media.editor.insert('[audio src="' + audioUrl + '"]');
+        });
+
+        frame.open();
+    });
+});
+Adăugarea Scriptului în Plugin
+Adaugă următoarea funcție în fișierul principal al pluginului (openai-tts-plugin.php) pentru a încărca scriptul în backend-ul WordPress.
+
+php
+Copy code
+function enqueue_custom_admin_script() {
+    wp_enqueue_media();
+    wp_enqueue_script('my-upload-script', plugin_dir_url(__FILE__) . 'upload-script.js', array('jquery'), null, true);
+}
+add_action('admin_enqueue_scripts', 'enqueue_custom_admin_script');
